@@ -113,6 +113,20 @@ async function shareEvidence(formData) {
   renderEvidence(evidence, 'You')
 }
 
+// Download evidence file
+function downloadEvidence(evidenceId) {
+  const evidence = evidenceItems.find(e => e.id === evidenceId)
+  if (!evidence || !evidence.fileData) return
+  
+  // Create download link
+  const link = document.createElement('a')
+  link.href = evidence.fileData
+  link.download = evidence.name
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
 // Create DOM element for evidence
 function renderEvidence(evidence, sharedBy) {
   const div = document.createElement('div')
@@ -122,7 +136,14 @@ function renderEvidence(evidence, sharedBy) {
       <strong>${evidence.name}</strong> (shared by ${sharedBy})
     </div>
     <div class="evidence-content">
-      ${evidence.fileData ? `<img src="${evidence.fileData}" alt="Evidence" class="evidence-image"/>` : ''}
+      ${evidence.fileData ? `
+        <img src="${evidence.fileData}" alt="Evidence" class="evidence-image"/>
+        <div class="evidence-actions">
+          <button class="download-button" data-evidence-id="${evidence.id}">
+            📥 Download Evidence
+          </button>
+        </div>
+      ` : ''}
       <p>${evidence.description || ''}</p>
     </div>
     <div class="evidence-controls">
@@ -138,6 +159,12 @@ function renderEvidence(evidence, sharedBy) {
   // Add vote button handler
   const voteButton = div.querySelector('.vote-button')
   voteButton.addEventListener('click', () => handleVote(evidence.id))
+  
+  // Add download button handler
+  const downloadButton = div.querySelector('.download-button')
+  if (downloadButton) {
+    downloadButton.addEventListener('click', () => downloadEvidence(evidence.id))
+  }
   
   document.querySelector('#evidence-items').appendChild(div)
 }
@@ -190,16 +217,19 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault()
     
     const fileInput = document.querySelector('#file-input')
+    const file = fileInput.files[0]
+    
+    if (!file) return
+    
     const formData = {
-      name: fileInput.files[0]?.name || 'Untitled Evidence',
-      type: fileInput.files[0]?.type || 'text/plain',
-      fileData: null
+      name: file.name,
+      type: file.type,
+      fileData: null,
+      description: ''  // You could add a description field to your form if needed
     }
     
-    // Handle file if present
-    if (fileInput.files[0]) {
-      formData.fileData = await readFileAsDataURL(fileInput.files[0])
-    }
+    // Handle file
+    formData.fileData = await readFileAsDataURL(file)
     
     shareEvidence(formData)
     fileInput.value = ''
