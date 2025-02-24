@@ -1,0 +1,9 @@
+Greetings 
+Here is my Project : A p2p investigation sharing platfrom where user can connect peer to peer , can share uncensored details
+so features 
+user can create or join a room 
+they can chat with each other 
+they can share files and download them
+i have used pears technology in this project 
+so let me show the interface 
+lets connect another user
