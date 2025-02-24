@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="style.css">
+    <script type='module' src='./app.js'></script>
+  </head>
+  <body>
+    <div id="titlebar">
+      <pear-ctrl></pear-ctrl>
+    </div>
+    
+    <!-- Room Setup -->
+    <main>
+      <div id="setup">
+        <h2>P2P Investigation Platform</h2>
+        <div class="setup-options">
+          <div class="create-option">
+            <button id="create-investigation" class="primary-button">Create New Investigation</button>
+          </div>
+          <div id="or">- or -</div>
+          <div class="join-option">
+            <form id="join-form">
+              <input 
+                required 
+                id="join-investigation-topic" 
+                type="text" 
+                placeholder="Enter Investigation ID" 
+                class="text-input"
+              />
+              <button type="submit" id="join-investigation" class="secondary-button">Join Investigation</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loading" class="hidden">
+        <div class="loading-spinner"></div>
+        <p>Connecting to investigation network...</p>
+      </div>
+
+      <!-- Main Investigation Interface -->
+      <div id="investigation" class="hidden">
+        <div id="header">
+          <div class="header-content">
+            <div class="investigation-info">
+              <h2>Investigation Room</h2>
+              <p>ID: <span id="investigation-topic"></span></p>
+            </div>
+            <div class="connection-info">
+              <p>Connected Investigators: <span id="peers-count">0</span></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <!-- Evidence Section -->
+          <div class="evidence-section">
+            <div class="section-header">
+              <h3>Evidence Collection</h3>
+              <form id="file-form" class="evidence-form">
+                <input 
+                  type="file" 
+                  id="file-input" 
+                  accept="image/*,video/*,application/pdf"
+                  class="file-input"
+                />
+                <button type="submit" class="primary-button">Share Evidence</button>
+              </form>
+            </div>
+            <div id="evidence-items" class="evidence-list"></div>
+          </div>
+
+          <!-- Discussion Section -->
+          <div class="discussion-section">
+            <div class="section-header">
+              <h3>Investigation Discussion</h3>
+            </div>
+            <div id="messages" class="messages-container"></div>
+            <form id="message-form" class="message-form">
+              <input 
+                type="text" 
+                id="message" 
+                placeholder="Add notes or discussion..." 
+                class="text-input"
+              />
+              <button type="submit" class="secondary-button">Send</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
