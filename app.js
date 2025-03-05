@@ -85,6 +85,9 @@ function onMessageReceived(message, peerId) {
     case 'vote':
       updateEvidenceVotes(message.evidenceId, message.votes)
       break
+    case 'report':
+      handleReportReceived(message.evidenceId)
+      break
   }
 }
 
@@ -102,6 +105,8 @@ async function shareEvidence(formData) {
     id: Date.now().toString(),
     timestamp: new Date().toISOString(),
     votes: 0,
+    reports: 0,
+    isReported: false,
     ...formData
   }
   
@@ -116,7 +121,7 @@ async function shareEvidence(formData) {
 // Download evidence file
 function downloadEvidence(evidenceId) {
   const evidence = evidenceItems.find(e => e.id === evidenceId)
-  if (!evidence || !evidence.fileData) return
+  if (!evidence || !evidence.fileData || evidence.isReported) return
   
   // Create download link
   const link = document.createElement('a')
@@ -130,41 +135,61 @@ function downloadEvidence(evidenceId) {
 // Create DOM element for evidence
 function renderEvidence(evidence, sharedBy) {
   const div = document.createElement('div')
-  div.className = 'evidence-item'
-  div.innerHTML = `
-    <div class="evidence-header">
-      <strong>${evidence.name}</strong> (shared by ${sharedBy})
-    </div>
-    <div class="evidence-content">
-      ${evidence.fileData ? `
-        <img src="${evidence.fileData}" alt="Evidence" class="evidence-image"/>
-        <div class="evidence-actions">
-          <button class="download-button" data-evidence-id="${evidence.id}">
-            📥 Download Evidence
-          </button>
+  div.setAttribute('data-evidence-id', evidence.id)
+  div.className = `evidence-item ${evidence.isReported ? 'reported' : ''}`
+  
+  const renderContent = () => {
+    div.innerHTML = `
+      <div class="evidence-header">
+        <strong>${evidence.name}</strong> (shared by ${sharedBy})
+        ${evidence.isReported ? '<span class="report-badge">REPORTED</span>' : ''}
+      </div>
+      ${!evidence.isReported ? `
+        <div class="evidence-content">
+          ${evidence.fileData ? `
+            <img src="${evidence.fileData}" alt="Evidence" class="evidence-image"/>
+            <div class="evidence-actions">
+              <button class="download-button" data-evidence-id="${evidence.id}">
+                📥 Download Evidence
+              </button>
+            </div>
+          ` : ''}
+          <p>${evidence.description || ''}</p>
         </div>
-      ` : ''}
-      <p>${evidence.description || ''}</p>
-    </div>
-    <div class="evidence-controls">
-      <button class="vote-button" data-evidence-id="${evidence.id}">
-        👍 <span class="vote-count">${evidence.votes}</span>
-      </button>
-    </div>
-    <div class="metadata">
-      Shared at: ${new Date(evidence.timestamp).toLocaleString()}
-    </div>
-  `
-  
-  // Add vote button handler
-  const voteButton = div.querySelector('.vote-button')
-  voteButton.addEventListener('click', () => handleVote(evidence.id))
-  
-  // Add download button handler
-  const downloadButton = div.querySelector('.download-button')
-  if (downloadButton) {
-    downloadButton.addEventListener('click', () => downloadEvidence(evidence.id))
+      ` : `
+        <div class="evidence-content">
+          <p class="reported-message">This evidence has been removed due to multiple reports.</p>
+        </div>
+      `}
+      <div class="evidence-controls">
+        <button class="vote-button" data-evidence-id="${evidence.id}">
+          👍 <span class="vote-count">${evidence.votes}</span>
+        </button>
+        <button class="report-button" data-evidence-id="${evidence.id}">
+          🚩 Report (<span class="report-count">${evidence.reports || 0}</span>)
+        </button>
+      </div>
+      <div class="metadata">
+        Shared at: ${new Date(evidence.timestamp).toLocaleString()}
+      </div>
+    `
+    
+    // Add vote button handler
+    const voteButton = div.querySelector('.vote-button')
+    voteButton.addEventListener('click', () => handleVote(evidence.id))
+    
+    // Add report button handler
+    const reportButton = div.querySelector('.report-button')
+    reportButton.addEventListener('click', () => handleReport(evidence.id))
+    
+    // Add download button handler
+    const downloadButton = div.querySelector('.download-button')
+    if (downloadButton) {
+      downloadButton.addEventListener('click', () => downloadEvidence(evidence.id))
+    }
   }
+
+  renderContent()
   
   document.querySelector('#evidence-items').appendChild(div)
 }
@@ -172,7 +197,7 @@ function renderEvidence(evidence, sharedBy) {
 // Handle voting on evidence
 function handleVote(evidenceId) {
   const evidence = evidenceItems.find(e => e.id === evidenceId)
-  if (evidence) {
+  if (evidence && !evidence.isReported) {
     evidence.votes++
     broadcastToPeers({
       type: 'vote',
@@ -183,21 +208,68 @@ function handleVote(evidenceId) {
   }
 }
 
+// Handle reporting evidence
+function handleReport(evidenceId) {
+  const evidence = evidenceItems.find(e => e.id === evidenceId)
+  if (evidence && !evidence.isReported) {
+    evidence.reports = (evidence.reports || 0) + 1
+    
+    // Check if reports exceed threshold
+    if (evidence.reports >= 5) {
+      evidence.isReported = true
+    }
+    
+    broadcastToPeers({
+      type: 'report',
+      evidenceId: evidenceId,
+      reports: evidence.reports,
+      isReported: evidence.isReported
+    })
+    
+    updateEvidenceReports(evidenceId, evidence.reports, evidence.isReported)
+  }
+}
+
+// Handle report received from peer
+function handleReportReceived(evidenceId) {
+  const evidence = evidenceItems.find(e => e.id === evidenceId)
+  if (evidence) {
+    evidence.reports = (evidence.reports || 0) + 1
+    
+    // Check if reports exceed threshold
+    if (evidence.reports >= 5) {
+      evidence.isReported = true
+    }
+    
+    updateEvidenceReports(evidenceId, evidence.reports, evidence.isReported)
+  }
+}
+
+// Update report display
+function updateEvidenceReports(evidenceId, newReports, isReported) {
+  const evidenceItem = document.querySelector(`.evidence-item[data-evidence-id="${evidenceId}"]`)
+  
+  if (evidenceItem) {
+    const reportCount = evidenceItem.querySelector('.report-count')
+    if (reportCount) {
+      reportCount.textContent = newReports
+    }
+    
+    if (isReported) {
+      evidenceItem.classList.add('reported')
+      // Re-render the evidence item to remove preview
+      const evidence = evidenceItems.find(e => e.id === evidenceId)
+      renderEvidence(evidence, evidence.sharedBy)
+    }
+  }
+}
+
 // Update vote display
 function updateEvidenceVotes(evidenceId, newVotes) {
   const voteCount = document.querySelector(`button[data-evidence-id="${evidenceId}"] .vote-count`)
   if (voteCount) {
     voteCount.textContent = newVotes
   }
-}
-
-// Add chat message to display
-function addChatMessage(from, content) {
-  const div = document.createElement('div')
-  div.textContent = `<${from}> ${content}`
-  const messagesDiv = document.querySelector('#messages')
-  messagesDiv.appendChild(div)
-  messagesDiv.scrollTop = messagesDiv.scrollHeight
 }
 
 // Initialize the application
@@ -251,6 +323,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })
 })
+
+// Add chat message to display
+function addChatMessage(from, content) {
+  const div = document.createElement('div')
+  div.textContent = `<${from}> ${content}`
+  const messagesDiv = document.querySelector('#messages')
+  messagesDiv.appendChild(div)
+  messagesDiv.scrollTop = messagesDiv.scrollHeight
+}
 
 // Helper function to read file as Data URL
 function readFileAsDataURL(file) {
