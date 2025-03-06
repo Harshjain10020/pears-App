@@ -29,7 +29,7 @@ swarm.on('connection', (peer) => {
 
 // Update connected peers count
 swarm.on('update', () => {
-  document.querySelector('#peers-count').textContent = swarm.connections.size
+  document.querySelector('#peers-count').textContent = swarm.connections.size+1
 })
 
 // Create a new investigation room
