@@ -20,6 +20,10 @@ A **decentralized journalism platform** where users can share **evidence, discus
 [![Watch the Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg)](https://youtu.be/EUYFPo0Rruo)
 
 ---
+## Stage link 
+```bash
+pear://dq7jqez4hp4j4qqx15c9n7y9e3wfpx3ysr7jzgtfh6d9jdaakcwy
+```
 
 ## 🔗 Social Links
 - **Twitter/X**: [Your Twitter Handle](https://twitter.com/yakuza_anom)
