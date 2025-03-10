@@ -18,6 +18,8 @@ A **decentralized journalism platform** where users can share **evidence, discus
 
 ## 🎥 Demo Video
 [![Watch the Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg)](https://youtu.be/EUYFPo0Rruo)
+[gdrive](https://drive.google.com/file/d/1-4CoITnbpz1DZpMNpulVtHg2uW5dbR-c/view?usp=sharing)
+
 
 ---
 ## Stage link 
