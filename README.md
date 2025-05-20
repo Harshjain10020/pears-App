@@ -1,4 +1,4 @@
-# P2P Crowd-Sourced Investigations Platform
+# InvestiNet : P2P Crowd-Sourced Investigations Platform
 
 ## 📌 Project Overview
 A **decentralized journalism platform** where users can share **evidence, discuss events, and fight censorship** without a central authority. Built using **Hyperdrive & Hyperswarm**, this peer-to-peer system ensures **secure and censorship-resistant collaboration**.
